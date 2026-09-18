@@ -27,7 +27,7 @@ def evaluate_against_policy(state: ReimbursementState) -> dict:
     snippets = state.get("policy_snippets")
     if snippets is None:
         snippets = retrieve_policy_snippets(state["company_policy"], expenses_json)
-    snippet_text = "\n\n".join(snippets)
+    snippet_text = "\n\n".join(snippets)[:16000]
 
     prompt = f"""You are a logical and precise expense auditor.
 
@@ -87,12 +87,6 @@ Result: {{"reason": "Team dinner count unspecified. Total 1500 exceeds limit of 
 Expense: {{"category": "meal", "amount": 400, "description": "Lunch"}}
 Result: {{"reason": "Total 400 is within limit of 500. Approved.", "status": "approved"}}
 
-─────────────────────────────────
-COMPANY REIMBURSEMENT POLICY (FULL):
-─────────────────────────────────
-{state['company_policy']}
-─────────────────────────────────
-
 RELEVANT POLICY SNIPPETS (from RAG search):
 ─────────────────────────────────
 {snippet_text}
@@ -118,7 +112,7 @@ REQUIRED OUTPUT FORMAT (one object per expense, same order):
   }}
 ]
 """
-    response = get_llm().invoke(prompt)
+    response = get_llm().invoke(prompt, max_tokens=1500)
 
     try:
         results = parse_json(response.content)
