@@ -9,7 +9,8 @@ from langchain_core.documents import Document
 from langchain_community.vectorstores import Chroma
 
 # path where chroma will persist the vector store
-_VECTORSTORE_PATH = os.getenv("VECTORSTORE_PATH", "./vectorstore")
+# Use /tmp on Railway (ephemeral, always writable); override via VECTORSTORE_PATH env var
+_VECTORSTORE_PATH = os.getenv("VECTORSTORE_PATH", "/tmp/vectorstore")
 
 _embeddings: OpenAIEmbeddings | None = None
 _vectorstore: Chroma | None = None

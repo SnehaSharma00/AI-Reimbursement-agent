@@ -5,4 +5,9 @@ venv/
 ff/env
 .vscode/
 __pycache__/
+**/__pycache__/
 *.py[cod]
+ff/vectorstore/
+vectorstore/
+*.sqlite3
+.DS_Store
