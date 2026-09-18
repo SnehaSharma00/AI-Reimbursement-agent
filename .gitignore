@@ -1,0 +1,8 @@
+.env
+**/.env
+venv/
+**/venv/
+ff/env
+.vscode/
+__pycache__/
+*.py[cod]
