@@ -59,7 +59,7 @@ REQUIRED OUTPUT FORMAT (JSON array):
   }}
 ]
 """
-    response = get_llm().invoke(prompt)
+    response = get_llm().invoke(prompt, max_tokens=500)
 
     try:
         expenses = parse_json(response.content)

@@ -16,7 +16,7 @@ def get_llm() -> ChatGroq:
     global _llm_instance
     if _llm_instance is None:
         _llm_instance = ChatGroq(
-            model=os.getenv("GROQ_MODEL", "openai/gpt-oss-120b"),
+            model=os.getenv("GROQ_MODEL", "openai/gpt-oss-20b"),
             temperature=0,
         )
     return _llm_instance

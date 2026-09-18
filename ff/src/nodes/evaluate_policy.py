@@ -27,67 +27,22 @@ def evaluate_against_policy(state: ReimbursementState) -> dict:
     snippets = state.get("policy_snippets")
     if snippets is None:
         snippets = retrieve_policy_snippets(state["company_policy"], expenses_json)
-    snippet_text = "\n\n".join(snippets)[:3500]
+    snippet_text = "\n\n".join(snippets)[:2000]
 
-    prompt = f"""You are a logical and precise expense auditor.
-
-You will receive:
-  1. A company reimbursement policy.
-  2. A list of expense claims.
-
-(For efficiency, a retrieval subsystem has already identified a few
-relevant policy passages; they are shown under "RELEVANT POLICY SNIPPETS".)
-
-YOUR TASK:
-For EACH expense, decide if it is APPROVED or REJECTED based on the policy.
+    prompt = f"""You are a logical expense auditor. Decide if each expense is APPROVED, REJECTED, or PARTIALLY_APPROVED based strictly on the policy snippets.
 
 RULES:
-- Evaluate each expense INDEPENDENTLY.
-- Base your decision ONLY on what the policy says.
-- **NUMERIC FORMAT**: IGNORE commas in numbers. Treat "12,000" as 12000. Treat "11,000" as 11000.
-- **RATE CALCULATION**: If an expense is for multiple units (e.g. 3 nights), calculate the PER-UNIT cost:
-  - Step 1: Divide Total Amount by Quantity => Per-Unit Rate.
-  - Step 2: Find the Policy Limit for that category (ignore commas).
-  - Step 3: Compare Rate vs Limit.
-    - If Rate <= Limit, Status is APPROVED.
-    - If Rate > Limit:
-      - Approve up to (Limit × Quantity).
-      - Reject only the excess amount.
-      - Status should be "partially_approved".
-      - Clearly explain approved vs excess amount.
+- Evaluate each expense independently.
+- Base decision ONLY on policy snippets below.
+- NUMERIC FORMAT: Treat "12,000" as 12000.
+- RATE CALCULATION: For multi-night/multi-day expenses, calculate per-unit rate = Total Amount / Quantity.
+  - If Rate <= Limit -> APPROVED.
+  - If Rate > Limit -> approve (Limit * Quantity), reject excess -> status "partially_approved".
+- TEAM MEALS / FIXED LIMITS:
+  - If person count known: per-person rate vs limit.
+  - If person count unknown: total amount vs limit (approve up to limit, reject excess -> "partially_approved").
 
-- **TEAM MEALS AND FIXED LIMIT CATEGORIES**:
-  - If person count is KNOWN:
-      Step 1: Calculate per-person cost.
-      Step 2: Compare with per-person limit.
-  - If person count is UNKNOWN:
-      Compare TOTAL Amount vs Policy Limit.
-
-  - If Amount <= Limit → APPROVED.
-  - If Amount > Limit:
-      - Approve up to the policy limit.
-      - Reject only the excess amount.
-      - Status must be "partially_approved".
-      - Clearly mention approved and rejected portions.
-
-
-- Return ONLY a valid JSON array.
-
-EXAMPLES:
-Policy: "Hotel limit 12,000/night. Meals 500/day."
-Expense: {{"category": "hotel", "amount": 30000, "description": "Hotel for 3 nights"}}
-Result: {{"reason": "Rate: 30000/3 = 10000. Limit: 12000. Since 10000 <= 12000, it is approved.", "status": "approved"}}
-
-Expense: {{"category": "hotel", "amount": 28000, "description": "Hotel for 2 nights"}}
-Result: {{"reason": "Rate: 28000/2 = 14000. Limit: 12000. Since 14000 > 12000, it is rejected.", "status": "rejected"}}
-
-Expense: {{"category": "meal", "amount": 1500, "description": "Team dinner"}}
-Result: {{"reason": "Team dinner count unspecified. Total 1500 exceeds limit of 500. Rejected.", "status": "rejected"}}
-
-Expense: {{"category": "meal", "amount": 400, "description": "Lunch"}}
-Result: {{"reason": "Total 400 is within limit of 500. Approved.", "status": "approved"}}
-
-RELEVANT POLICY SNIPPETS (from RAG search):
+RELEVANT POLICY SNIPPETS:
 ─────────────────────────────────
 {snippet_text}
 ─────────────────────────────────
@@ -95,7 +50,7 @@ RELEVANT POLICY SNIPPETS (from RAG search):
 EXPENSE CLAIMS:
 {expenses_json}
 
-REQUIRED OUTPUT FORMAT (one object per expense, same order):
+RETURN ONLY A VALID JSON ARRAY in this format:
 [
   {{
     "expense_index": 0,
@@ -105,14 +60,14 @@ REQUIRED OUTPUT FORMAT (one object per expense, same order):
     "rejected_amount": 500,
     "amount": 2000,
     "currency": "INR",
-    "description": "Team lunch at restaurant",
-    "reason": "Policy allows meal expenses up to INR 1500 per day; this exceeds the limit.",
-    "status": "approved | rejected | partially_approved | needs_review",
+    "description": "Team lunch",
+    "reason": "Exceeds daily meal limit of 1500; 1500 approved, 500 rejected.",
+    "status": "partially_approved",
     "policy_reference": "Section 3.2 – Meal Allowance"
   }}
 ]
 """
-    response = get_llm().invoke(prompt, max_tokens=1500)
+    response = get_llm().invoke(prompt, max_tokens=800)
 
     try:
         results = parse_json(response.content)
