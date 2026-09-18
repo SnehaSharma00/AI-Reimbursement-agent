@@ -27,7 +27,7 @@ def evaluate_against_policy(state: ReimbursementState) -> dict:
     snippets = state.get("policy_snippets")
     if snippets is None:
         snippets = retrieve_policy_snippets(state["company_policy"], expenses_json)
-    snippet_text = "\n\n".join(snippets)[:16000]
+    snippet_text = "\n\n".join(snippets)[:3500]
 
     prompt = f"""You are a logical and precise expense auditor.
 
