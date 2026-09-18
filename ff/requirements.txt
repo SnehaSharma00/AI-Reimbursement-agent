@@ -1,0 +1,13 @@
+langchain
+langchain-core
+langchain-openai
+langchain-groq
+langchain-community
+chromadb
+openai
+langgraph
+pytest
+sentence-transformers
+python-dotenv
+streamlit
+PyPDF2
