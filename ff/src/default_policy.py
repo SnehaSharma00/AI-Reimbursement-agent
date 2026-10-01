@@ -213,5 +213,5 @@ A: Companies should have a clear anti-fraud policy covering false, inflated, or 
 Q: What is the deadline for submitting reimbursement claims?
 A: Most companies set a 30-day deadline from the date of expense for submitting reimbursement claims. Some organizations allow up to 60 days for business travel reimbursements. Late claims typically require special approval from department heads. Year-end claims usually have a hard deadline of March 15-20 for the current financial year.
 
-    
+         
 """    
